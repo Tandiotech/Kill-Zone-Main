@@ -1,0 +1,10 @@
+# Server deployment: keep the app private and let nginx terminate TLS.
+# Without this, compose binds 0.0.0.0:5000 and the app is reachable over plain
+# HTTP on the public IP, bypassing the certificate.
+# `!override` replaces the base ports list instead of appending to it.
+# Auto-merged by `docker compose up` — delete this file for plain local dev.
+services:
+  killzone:
+    ports: !override
+      - "127.0.0.1:5000:5000"
+    restart: unless-stopped
