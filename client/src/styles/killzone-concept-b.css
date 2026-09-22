@@ -1,0 +1,1690 @@
+/* Concept B — Institutional Gold Radar (scoped under .kz-v2) */
+
+.kz-v2 {
+  --green-bright: #8fc89a;
+  --green: #6ca678;
+  --green-dim: #2c4f36;
+  --green-faint: rgba(108, 166, 120, 0.1);
+  --red-bright: #dc8a8e;
+  --red: #c66a6f;
+  --red-dim: #582b2e;
+  --red-faint: rgba(198, 106, 111, 0.1);
+  --line-gold: rgba(212, 175, 87, 0.18);
+  --sans: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+.kz-v2.gold-radar-workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--bg-0);
+}
+
+.kz-v2 .gold-radar-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(212, 175, 87, 0.06), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 15% 100%, rgba(108, 166, 120, 0.03), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 85% 100%, rgba(198, 106, 111, 0.03), transparent 50%),
+    linear-gradient(180deg, #08090c 0%, #06070a 100%);
+}
+
+.kz-v2 .gold-radar-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, #000 20%, transparent 75%);
+}
+
+.kz-v2 .gold-radar-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px 10px;
+  max-width: 2200px;
+  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+/* Viewport stage: grid + bottom strip fit without page scroll */
+.kz-v2 .gold-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kz-v2 .gold-decision-brief {
+  border: 1px solid var(--line-gold);
+  border-radius: 6px;
+  padding: 12px 18px;
+  background:
+    radial-gradient(900px 200px at 0% 0%, rgba(212, 175, 87, 0.08), transparent 55%),
+    linear-gradient(180deg, var(--bg-2), var(--bg-1));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.kz-v2 .gold-decision-brief-kicker {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-bright, #d4af57);
+}
+
+.kz-v2 .gold-decision-brief-headline {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: clamp(17px, 1.6vw, 22px);
+  letter-spacing: -0.02em;
+  color: var(--text-1);
+  line-height: 1.25;
+}
+
+.kz-v2 .gold-decision-brief-headline--link {
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.kz-v2 .gold-decision-brief-headline--link:hover {
+  color: var(--gold-bright, #d4af57);
+}
+
+.kz-v2 .gold-decision-brief-body {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.45;
+  max-width: 1100px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Top bar */
+.kz-v2 .b-bottom .feed-row:nth-child(n + 3) {
+  display: none;
+}
+
+.kz-v2 .b-bottom .b-inv-row:nth-child(n + 4) {
+  display: none;
+}
+
+.kz-v2 .kz-topbar {
+  height: 56px;
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr) auto;
+  align-items: center;
+  border: 1px solid var(--line-2);
+  background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
+  border-radius: 6px;
+  padding: 0 18px 0 14px;
+  gap: 16px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.kz-v2 .kz-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.kz-v2 .kz-logo-mark {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line-gold);
+  background: linear-gradient(135deg, #1a1408, #0a0905);
+  color: var(--gold);
+  display: grid;
+  place-items: center;
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-weight: 700;
+  font-size: 18px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 18px rgba(212, 175, 87, 0.1);
+  flex-shrink: 0;
+}
+
+.kz-v2 .kz-logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+  min-width: 0;
+}
+
+.kz-v2 .kz-logo-text b {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  color: var(--text-1);
+}
+
+.kz-v2 .kz-logo-text span {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: var(--gold-dim, var(--gold-deep));
+}
+
+.kz-v2 .kz-topbar-center {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+}
+
+.kz-v2 .kz-topbar-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--line-2);
+  flex-shrink: 0;
+}
+
+.kz-v2 .kz-asset {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.kz-v2 .kz-asset-pair {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  color: var(--text-2);
+}
+
+.kz-v2 .kz-asset-pair em {
+  color: var(--text-3);
+  font-style: normal;
+  padding: 0 4px;
+}
+
+.kz-v2 .kz-asset-price {
+  font-weight: 600;
+  font-size: 22px;
+  color: var(--text-1);
+  letter-spacing: -0.01em;
+}
+
+.kz-v2 .kz-asset-chg {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+
+.kz-v2 .kz-asset-chg.bull {
+  color: var(--green-bright);
+  background: var(--green-faint);
+  border: 1px solid rgba(108, 166, 120, 0.25);
+}
+
+.kz-v2 .kz-asset-chg.bear {
+  color: var(--red-bright);
+  background: var(--red-faint);
+  border: 1px solid rgba(198, 106, 111, 0.25);
+}
+
+.kz-v2 .kz-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--text-3);
+  border: 1px solid var(--line-2);
+  padding: 5px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kz-v2 .kz-pill-sep {
+  color: var(--text-3);
+  opacity: 0.7;
+}
+
+.kz-v2 .kz-pill b {
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.kz-v2 .kz-pill-gold {
+  border-color: var(--line-gold);
+  color: var(--gold-dim, var(--gold-deep));
+  flex-shrink: 0;
+}
+
+.kz-v2 .kz-pill-gold b {
+  color: var(--gold-bright);
+}
+
+.kz-v2 .kz-live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-2);
+  letter-spacing: 0.14em;
+}
+
+.kz-v2 .kz-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green, var(--bull));
+  box-shadow: 0 0 12px rgba(108, 166, 120, 0.7);
+  animation: kz-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes kz-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+}
+
+.kz-v2 .kz-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.kz-v2 .gold-what-changed {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line-1);
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.kz-v2 .gold-what-changed strong {
+  color: var(--gold-bright);
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Grid layout — fills viewport stage; side columns scroll internally */
+.kz-v2 .b-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr) minmax(240px, 320px);
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.kz-v2 .b-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.kz-v2 .b-stack--side {
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+
+.kz-v2 .b-stack--side::-webkit-scrollbar {
+  width: 5px;
+}
+
+.kz-v2 .b-stack--side::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border-radius: 4px;
+}
+
+.kz-v2 .b-stack--radar {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.kz-v2 .b-bottom {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 10px;
+  flex-shrink: 0;
+  max-height: clamp(140px, 18vh, 200px);
+  min-height: 0;
+}
+
+.kz-v2 .b-bottom .card {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.kz-v2 .b-bottom .feed-list,
+.kz-v2 .b-bottom .b-inv-list {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Cards */
+.kz-v2 .card {
+  position: relative;
+  background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.kz-v2 .card-gold {
+  border-color: var(--line-gold);
+  box-shadow: inset 0 0 24px rgba(212, 175, 87, 0.04);
+}
+
+.kz-v2 .card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px 12px;
+  border-bottom: 1px solid var(--line-1);
+}
+
+.kz-v2 .card-eyebrow {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kz-v2 .card-eyebrow::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(212, 175, 87, 0.7);
+}
+
+.kz-v2 .card-meta {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.kz-v2 .label-eye {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.kz-v2 .label-eye-gold {
+  color: var(--gold-dim, var(--gold-deep));
+}
+
+/* Pressure bar */
+.kz-v2 .pbar {
+  position: relative;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--bg-3);
+  overflow: hidden;
+}
+
+.kz-v2 .pbar-fill-l {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, var(--green-dim), var(--green, var(--bull)));
+  transition: width 0.6s var(--ease, ease);
+}
+
+.kz-v2 .pbar-fill-r {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, var(--red, var(--bear)), var(--red-dim));
+  transition: width 0.6s var(--ease, ease);
+}
+
+.kz-v2 .pbar-tick {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  background: var(--text-3);
+  opacity: 0.45;
+}
+
+/* Score card — compact for viewport fit */
+.kz-v2 .b-score-card {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kz-v2 .b-score {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-weight: 600;
+  font-size: clamp(42px, 4.5vw, 56px);
+  line-height: 0.9;
+  color: var(--text-1);
+  letter-spacing: -0.04em;
+}
+
+.kz-v2 .b-score em {
+  color: var(--text-3);
+  font-style: normal;
+  font-size: 18px;
+}
+
+.kz-v2 .b-regime-tag {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  padding: 5px 10px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  border: 1px solid var(--line-gold);
+  background: rgba(212, 175, 87, 0.06);
+}
+
+.kz-v2 .b-mini-pbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.kz-v2 .b-mini-pbar .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.kz-v2 .b-mini-pbar .lab {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.kz-v2 .b-mini-pbar .val {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.kz-v2 .b-list {
+  padding: 12px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kz-v2 .b-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--line-1);
+}
+
+.kz-v2 .b-row:last-child {
+  border-bottom: 0;
+}
+
+.kz-v2 .b-row .k {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.kz-v2 .b-row .v {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 14px;
+  color: var(--text-1);
+  font-weight: 500;
+}
+
+/* Regime buttons */
+.kz-v2 .b-regime-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.kz-v2 .b-regime-btn {
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  background: var(--bg-1);
+  cursor: default;
+}
+
+.kz-v2 .b-regime-btn.is-on {
+  color: var(--gold-bright);
+  border-color: var(--line-gold);
+  background: rgba(212, 175, 87, 0.06);
+}
+
+.kz-v2 .b-regime-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.kz-v2 .b-regime-desc {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-gold);
+  border-radius: 4px;
+  background: rgba(212, 175, 87, 0.05);
+  font-size: 13px;
+  color: var(--text-1);
+  line-height: 1.35;
+}
+
+/* Intraday timing — 3 dominance bars (Spider-V1) */
+.kz-v2 .timing-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.kz-v2 .timing-bar {
+  padding: 12px 16px 14px;
+  border-bottom: 1px solid var(--line-1);
+  background:
+    radial-gradient(ellipse 80% 100% at 0% 50%, rgba(108, 166, 120, 0.04), transparent 55%),
+    radial-gradient(ellipse 80% 100% at 100% 50%, rgba(198, 106, 111, 0.04), transparent 55%);
+}
+
+.kz-v2 .timing-bar:last-child {
+  border-bottom: 0;
+}
+
+.kz-v2 .timing-bar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.kz-v2 .timing-bar-label {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.kz-v2 .timing-bar-fresh {
+  font-size: 9px;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+}
+
+.kz-v2 .timing-bar-stats {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.kz-v2 .timing-bar-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kz-v2 .timing-bar-side.bull {
+  text-align: left;
+}
+
+.kz-v2 .timing-bar-side.bear {
+  text-align: right;
+}
+
+.kz-v2 .timing-bar-side .lbl {
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.kz-v2 .timing-bar-side .pct {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.kz-v2 .timing-bar-side.bull .pct {
+  color: var(--green-bright);
+  text-shadow: 0 0 16px rgba(108, 166, 120, 0.25);
+}
+
+.kz-v2 .timing-bar-side.bear .pct {
+  color: var(--red-bright);
+  text-shadow: 0 0 16px rgba(198, 106, 111, 0.25);
+}
+
+.kz-v2 .timing-bar-verdict {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--line-2);
+  background: var(--bg-3);
+  text-align: center;
+  min-width: 0;
+}
+
+.kz-v2 .timing-bar-verdict.bull {
+  border-color: rgba(108, 166, 120, 0.35);
+  background: linear-gradient(135deg, rgba(108, 166, 120, 0.1), var(--bg-3));
+  box-shadow: 0 0 14px rgba(108, 166, 120, 0.08);
+}
+
+.kz-v2 .timing-bar-verdict.bear {
+  border-color: rgba(198, 106, 111, 0.35);
+  background: linear-gradient(135deg, rgba(198, 106, 111, 0.1), var(--bg-3));
+  box-shadow: 0 0 14px rgba(198, 106, 111, 0.08);
+}
+
+.kz-v2 .timing-bar-verdict .verdict-lbl {
+  display: block;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-1);
+}
+
+.kz-v2 .timing-bar-verdict.bull .verdict-lbl {
+  color: var(--green-bright);
+}
+
+.kz-v2 .timing-bar-verdict.bear .verdict-lbl {
+  color: var(--red-bright);
+}
+
+.kz-v2 .timing-bar-verdict .verdict-edge {
+  display: block;
+  font-size: 8px;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.kz-v2 .timing-bar-track {
+  position: relative;
+  height: 14px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--bg-3);
+  display: flex;
+}
+
+.kz-v2 .timing-bar-track .bull {
+  background: linear-gradient(90deg, var(--green-dim), var(--green-bright));
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 6px;
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kz-v2 .timing-bar-track .bear {
+  background: linear-gradient(90deg, var(--red-bright), var(--red-dim));
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+  margin-left: auto;
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.kz-v2 .timing-bar-track .track-lbl {
+  font-size: 8px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.55);
+  letter-spacing: 0.04em;
+}
+
+.kz-v2 .timing-bar-center {
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--text-3);
+  opacity: 0.5;
+  z-index: 2;
+}
+
+/* Radar — 8-factor spider chart */
+.kz-v2 .radar-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid var(--line-gold);
+  border-radius: 8px;
+  background: linear-gradient(165deg, #0e1016 0%, #07080c 55%, #060709 100%);
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(212, 175, 87, 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.kz-v2 .radar-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(ellipse 70% 55% at 50% 42%, rgba(212, 175, 87, 0.07), transparent 70%);
+  z-index: 0;
+}
+
+.kz-v2 .radar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line-1);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  background: rgba(8, 9, 12, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+.kz-v2 .radar-live-pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green, var(--bull));
+  box-shadow: 0 0 10px rgba(108, 166, 120, 0.8);
+  animation: kz-pulse 2.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.kz-v2 .radar-head .card-eyebrow::before {
+  display: none;
+}
+
+.kz-v2 .radar-head .card-eyebrow {
+  gap: 10px;
+}
+
+.kz-v2 .radar-stage {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.kz-v2 .radar-stage-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.kz-v2 .radar-stage-grid {
+  position: absolute;
+  inset: -50%;
+  background-image:
+    radial-gradient(circle at center, rgba(212, 175, 87, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 65% 60% at 50% 50%, #000 10%, transparent 72%);
+  opacity: 0.7;
+}
+
+.kz-v2 .radar-stage-glow {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 45%;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.35;
+}
+
+.kz-v2 .radar-stage-glow--bull {
+  top: 2%;
+  background: rgba(108, 166, 120, 0.25);
+}
+
+.kz-v2 .radar-stage-glow--bear {
+  bottom: 2%;
+  background: rgba(198, 106, 111, 0.2);
+}
+
+.kz-v2 .radar-stage-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 82% 78% at 50% 50%, transparent 42%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+.kz-v2 .radar-svg-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  container-type: size;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.kz-v2 .radar-visual {
+  position: relative;
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.kz-v2 .radar-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  overflow: visible;
+}
+
+.kz-v2 .radar-spoke {
+  cursor: pointer;
+  outline: none;
+}
+
+.kz-v2 .radar-spoke-hit {
+  pointer-events: all;
+}
+
+.kz-v2 .radar-spoke-name,
+.kz-v2 .radar-spoke-val {
+  transition: font-size 0.15s ease, fill 0.15s ease;
+  pointer-events: none;
+}
+
+.kz-v2 .radar-visual.is-focus .radar-spoke:not(.is-hot) {
+  opacity: 0.45;
+}
+
+.kz-v2 .radar-tip {
+  position: absolute;
+  z-index: 30;
+  width: min(240px, 52%);
+  padding: 12px 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(212, 175, 87, 0.45);
+  background: rgba(8, 9, 12, 0.96);
+  box-shadow:
+    0 0 0 1px rgba(212, 175, 87, 0.08),
+    0 16px 36px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+  animation: radar-tip-in 0.16s ease-out;
+}
+
+.kz-v2 .radar-tip--bull {
+  border-color: rgba(108, 166, 120, 0.45);
+}
+
+.kz-v2 .radar-tip--bear {
+  border-color: rgba(198, 106, 111, 0.45);
+}
+
+.kz-v2 .radar-tip-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.kz-v2 .radar-tip-name {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.kz-v2 .radar-tip-val {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gold-bright);
+  white-space: nowrap;
+}
+
+.kz-v2 .radar-tip--bull .radar-tip-val {
+  color: var(--green-bright);
+}
+
+.kz-v2 .radar-tip--bear .radar-tip-val {
+  color: var(--red-bright);
+}
+
+.kz-v2 .radar-tip-tone {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  margin-bottom: 6px;
+}
+
+.kz-v2 .radar-tip-detail {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+@keyframes radar-tip-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.kz-v2 .radar-ring-pulse {
+  animation: radar-ring-breathe 4s ease-in-out infinite;
+}
+
+.kz-v2 .radar-polygon--fill {
+  animation: radar-poly-breathe 4.5s ease-in-out infinite;
+}
+
+.kz-v2 .radar-polygon--stroke {
+  stroke-dasharray: 5 3;
+  animation: radar-stroke-flow 14s linear infinite;
+}
+
+@keyframes radar-ring-breathe {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes radar-hub-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    stroke-width: 1;
+  }
+  50% {
+    opacity: 0.75;
+    stroke-width: 1.6;
+  }
+}
+
+@keyframes radar-poly-breathe {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes radar-stroke-flow {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -160;
+  }
+}
+
+.kz-v2 .radar-hub-ring {
+  animation: radar-hub-pulse 3.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kz-v2 .radar-live-pip,
+  .kz-v2 .radar-hub-ring,
+  .kz-v2 .radar-ring-pulse,
+  .kz-v2 .radar-polygon--fill,
+  .kz-v2 .radar-polygon--stroke,
+  .kz-v2 .radar-tip {
+    animation: none;
+  }
+
+  .kz-v2 .radar-svg animateTransform,
+  .kz-v2 .radar-svg animate {
+    display: none;
+  }
+}
+
+.kz-v2 .radar-foot {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--line-1);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  background: rgba(6, 7, 9, 0.92);
+  backdrop-filter: blur(6px);
+}
+
+.kz-v2 .radar-foot .cell {
+  padding: 8px 12px;
+  border-right: 1px solid var(--line-1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kz-v2 .radar-foot .v {
+  font-size: clamp(14px, 1.4vw, 18px);
+}
+
+.kz-v2 .radar-foot .cell:last-child {
+  border-right: 0;
+}
+
+.kz-v2 .radar-foot .k {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.kz-v2 .radar-foot .v {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-weight: 500;
+  font-size: 18px;
+  color: var(--text-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.kz-v2 .radar-foot .v.green {
+  color: var(--green-bright);
+}
+
+.kz-v2 .radar-foot .v.red {
+  color: var(--red-bright);
+}
+
+.kz-v2 .radar-foot .v.gold {
+  color: var(--gold-bright);
+}
+
+/* Sessions */
+.kz-v2 .b-session-list {
+  padding: 12px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kz-v2 .b-session {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-1);
+  border-radius: 4px;
+  background: var(--bg-1);
+}
+
+.kz-v2 .b-session.is-live {
+  border-color: var(--line-gold);
+  background: linear-gradient(90deg, rgba(212, 175, 87, 0.06), transparent);
+}
+
+.kz-v2 .b-session.is-primary {
+  border-color: var(--line-gold);
+  background: linear-gradient(90deg, rgba(212, 175, 87, 0.1), rgba(212, 175, 87, 0.02));
+}
+
+.kz-v2 .b-session .name {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: var(--text-1);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.kz-v2 .b-session.is-primary .name,
+.kz-v2 .b-session.is-live .name {
+  color: var(--gold-bright);
+}
+
+.kz-v2 .b-session .time {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.14em;
+  margin-top: 2px;
+}
+
+.kz-v2 .b-session .body .sub {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+
+.kz-v2 .b-session .tag {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  padding: 3px 8px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.kz-v2 .b-session .tag.primary {
+  background: var(--gold-bright);
+  color: #0a0905;
+}
+
+.kz-v2 .b-session .tag.secondary {
+  color: var(--gold);
+  border: 1px solid var(--line-gold);
+}
+
+.kz-v2 .b-session .tag.low {
+  color: var(--text-3);
+  border: 1px solid var(--line-2);
+}
+
+/* Action posture */
+.kz-v2 .b-action-card {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kz-v2 .b-action-stance {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: clamp(20px, 2vw, 28px);
+  letter-spacing: -0.02em;
+  color: var(--gold-bright);
+  line-height: 1.05;
+}
+
+.kz-v2 .b-action-stance em {
+  color: var(--text-1);
+  font-style: normal;
+}
+
+.kz-v2 .b-action-sub {
+  font-size: 14px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.kz-v2 .b-action-meter {
+  display: flex;
+  gap: 4px;
+}
+
+.kz-v2 .b-action-meter .step {
+  flex: 1;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--bg-3);
+  display: grid;
+  place-items: center;
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--text-4, var(--text-3));
+  text-transform: uppercase;
+}
+
+.kz-v2 .b-action-meter .step.on {
+  background: rgba(212, 175, 87, 0.2);
+  color: var(--gold-bright);
+  border: 1px solid var(--line-gold);
+}
+
+/* Feed */
+.kz-v2 .feed-list {
+  padding: 6px 0;
+}
+
+.kz-v2 .feed-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 90px 80px;
+  padding: 8px 16px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--line-1);
+}
+
+.kz-v2 .feed-row:last-child {
+  border-bottom: 0;
+}
+
+.kz-v2 .feed-row.is-primary {
+  background: linear-gradient(90deg, rgba(212, 175, 87, 0.04), transparent);
+}
+
+.kz-v2 .feed-row .ts {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--text-3);
+}
+
+.kz-v2 .feed-row .headline {
+  font-size: 13px;
+  color: var(--text-1);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.kz-v2 .feed-row .headline em {
+  color: var(--gold-bright);
+  font-style: normal;
+}
+
+.kz-v2 .feed-row .src {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.kz-v2 .feed-row .imp {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  padding: 3px 8px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  text-align: center;
+  justify-self: end;
+}
+
+.kz-v2 .feed-row .imp.high {
+  color: var(--gold-bright);
+  border: 1px solid var(--line-gold);
+  background: rgba(212, 175, 87, 0.06);
+}
+
+.kz-v2 .feed-row .imp.med {
+  color: var(--text-2);
+  border: 1px solid var(--line-2);
+}
+
+.kz-v2 .feed-row .imp.low {
+  color: var(--text-3);
+  border: 1px solid var(--line-1);
+}
+
+/* Invalidation */
+.kz-v2 .b-inv-list {
+  padding: 6px 0;
+}
+
+.kz-v2 .b-inv-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  padding: 10px 16px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--line-1);
+}
+
+.kz-v2 .b-inv-row:last-child {
+  border-bottom: 0;
+}
+
+.kz-v2 .b-inv-row .idx {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 16px;
+  color: var(--text-4, var(--text-3));
+  font-weight: 600;
+}
+
+.kz-v2 .b-inv-row .cond {
+  font-size: 14px;
+  color: var(--text-1);
+  line-height: 1.35;
+}
+
+.kz-v2 .b-inv-row .delta {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+
+.kz-v2 .b-inv-row .stat {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  padding: 4px 10px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.kz-v2 .b-inv-row .stat.near {
+  color: var(--red-bright);
+  border: 1px solid rgba(198, 106, 111, 0.35);
+  background: var(--red-faint);
+}
+
+.kz-v2 .b-inv-row .stat.armed {
+  color: var(--gold-bright);
+  border: 1px solid var(--line-gold);
+  background: rgba(212, 175, 87, 0.06);
+}
+
+.kz-v2 .b-inv-row .stat.remote {
+  color: var(--text-3);
+  border: 1px solid var(--line-2);
+}
+
+/* Forces compact */
+.kz-v2 .b-forces-compact {
+  padding: 14px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kz-v2 .b-force-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--line-1);
+}
+
+.kz-v2 .b-force-line:last-child {
+  border-bottom: 0;
+}
+
+.kz-v2 .b-force-line .fname {
+  color: var(--text-2);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kz-v2 .b-force-line.bull .fw {
+  color: var(--green-bright);
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+}
+
+.kz-v2 .b-force-line.bear .fw {
+  color: var(--red-bright);
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+}
+
+.kz-v2 .b-next-pulse {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.kz-v2 .b-next-pulse .timer {
+  font-family: "Geist Mono", "JetBrains Mono", monospace;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text-1);
+  letter-spacing: 0.06em;
+}
+
+@supports not (width: 1cqw) {
+  .kz-v2 .radar-visual {
+    width: min(100%, 52vh);
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 1439px) {
+  .kz-v2 .b-grid {
+    grid-template-columns: minmax(260px, 300px) minmax(0, 1fr) minmax(260px, 300px);
+  }
+}
+
+@media (max-width: 1199px) {
+  .kz-v2 .b-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "center center"
+      "left right";
+  }
+
+  .kz-v2 .b-grid > .b-stack--side:first-child {
+    grid-area: left;
+  }
+
+  .kz-v2 .b-grid > .b-stack--radar {
+    grid-area: center;
+    height: min(52vh, 520px);
+  }
+
+  .kz-v2 .b-grid > .b-stack--side:last-child {
+    grid-area: right;
+  }
+
+  .kz-v2 .b-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .kz-v2 .kz-topbar {
+    grid-template-columns: 1fr;
+    height: auto;
+    padding: 14px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 767px) {
+  .kz-v2.gold-radar-workspace {
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .kz-v2 .gold-stage {
+    flex: none;
+    min-height: auto;
+  }
+
+  .kz-v2 .b-grid {
+    flex: none;
+    min-height: auto;
+  }
+
+  .kz-v2 .b-stack--side {
+    overflow: visible;
+    max-height: none;
+  }
+
+  .kz-v2 .radar-card {
+    height: auto;
+    min-height: min(420px, 70vw);
+    container-type: inline-size;
+  }
+
+  .kz-v2 .radar-visual {
+    width: min(100%, 100vw - 48px);
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  .kz-v2 .timing-bar-side .pct {
+    font-size: 18px;
+  }
+
+  .kz-v2 .timing-bar-stats {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .kz-v2 .timing-bar-side.bear {
+    text-align: left;
+  }
+
+  .kz-v2 .timing-bar-verdict {
+    order: -1;
+  }
+
+  .kz-v2 .b-bottom {
+    max-height: none;
+  }
+
+  .kz-v2 .gold-decision-brief-body {
+    -webkit-line-clamp: unset;
+    display: block;
+  }
+
+  .kz-v2 .gold-radar-inner {
+    padding: 12px;
+    height: auto;
+  }
+
+  .kz-v2 .b-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: unset;
+  }
+
+  .kz-v2 .b-grid > .b-stack:first-child,
+  .kz-v2 .b-grid > .b-stack--radar,
+  .kz-v2 .b-grid > .b-stack:last-child {
+    grid-area: unset;
+  }
+
+  .kz-v2 .feed-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .kz-v2 .feed-row .imp {
+    justify-self: start;
+  }
+
+  .kz-v2 .b-session {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .kz-v2 .radar-foot {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .kz-v2 .radar-foot .cell:nth-child(2) {
+    border-right: 0;
+  }
+
+  .kz-v2 .radar-foot .cell:nth-child(3),
+  .kz-v2 .radar-foot .cell:nth-child(4) {
+    border-top: 1px solid var(--line-1);
+  }
+}

@@ -1,0 +1,13 @@
+# Static UI build (Express API must be hosted separately; see .env.example)
+[build]
+  command = "npm run build"
+  publish = "dist/public"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Hash-based routing (wouter) uses / only; optional fallback for direct loads
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

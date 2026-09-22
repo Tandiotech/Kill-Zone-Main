@@ -1,0 +1,11 @@
+# Render Blueprint — one Web Service: Express API + static SPA (same origin).
+# New → Blueprint → connect this repo, or create a Web Service manually with the same commands.
+# Set secrets in the dashboard: Environment → Environment Variables (see .env.example).
+
+services:
+  - type: web
+    name: killzone-gold
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
