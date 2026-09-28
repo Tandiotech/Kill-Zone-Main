@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { REACTIVE_REFRESH_MS } from '@/lib/refresh'
 import { getJSON } from './api'
-import { buildModel, type ChartPayload, type HourlyPayload, type Model, type SignalPayload } from './model'
+import {
+  buildModel,
+  type ChartPayload,
+  type HourlyPayload,
+  type Model,
+  type ScoreApiPayload,
+  type SignalPayload,
+} from './model'
 
 /* The signal endpoint serves the server's cache, so polling it every minute is
    cheap; the score history and hourly series change slowly and follow the
@@ -20,6 +27,7 @@ export function useCockpit(): Cockpit {
   const [signal, setSignal] = useState<SignalPayload | null>(null)
   const [chart, setChart] = useState<ChartPayload | null>(null)
   const [hourly, setHourly] = useState<HourlyPayload | null>(null)
+  const [scoreApi, setScoreApi] = useState<ScoreApiPayload | null>(null)
   const [online, setOnline] = useState(false)
   const [lastOk, setLastOk] = useState<number | null>(null)
 
@@ -39,6 +47,7 @@ export function useCockpit(): Cockpit {
     const pullSlow = async () => {
       getJSON<ChartPayload>('/api/chart-data').then(d => { if (!stopped) setChart(d) }).catch(() => {})
       getJSON<HourlyPayload>('/api/price-hourly').then(d => { if (!stopped) setHourly(d) }).catch(() => {})
+      getJSON<ScoreApiPayload>('/api/score').then(d => { if (!stopped) setScoreApi(d) }).catch(() => {})
     }
 
     pullSignal(); pullSlow()
@@ -47,6 +56,9 @@ export function useCockpit(): Cockpit {
     return () => { stopped = true; clearInterval(a); clearInterval(b) }
   }, [])
 
-  const model = useMemo(() => (signal ? buildModel(signal, chart, hourly) : null), [signal, chart, hourly])
+  const model = useMemo(
+    () => (signal ? buildModel(signal, chart, hourly, scoreApi) : null),
+    [signal, chart, hourly, scoreApi],
+  )
   return { model, online, lastOk }
 }

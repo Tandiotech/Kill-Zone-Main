@@ -5,7 +5,8 @@ import * as geo from './lib/geo.js'
 import { charts, draw, renderRest, trendOpt } from './lib/charts.js'
 import { signOut } from './lib/api'
 import { useCockpit } from './lib/useCockpit'
-import { HUBS, TOUR, sessionLabel, type Driver, type Model } from './lib/model'
+import { HUBS, TOUR, sessionLabel, type Model } from './lib/model'
+import { TimingBars } from './TimingBars'
 
 interface Earth { focus: (city: string) => void }
 
@@ -40,9 +41,8 @@ export default function App() {
 }
 
 function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; lastOk: number }) {
-  const { signal, kpi, drivers, levels, alerts } = model
+  const { signal, kpi, drivers, levels, alerts, timing } = model
 
-  const [curDriver, setCurDriver] = useState<string | null>(null)
   const [curLevel, setCurLevel] = useState(-1)
   const [pick, setPick] = useState<{ city: string } | null>(null)
   const [rtHint, setRtHint] = useState('Click to locate')
@@ -138,7 +138,7 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
       if (paused || idle.current % 12) return
       setTourIdx(i => {
         const next = (i + 1) % TOUR.length, t = TOUR[next]
-        setCurDriver(null); setPick(null)
+        setPick(null)
         earth.current?.focus(t.hub)
         return next
       })
@@ -149,16 +149,8 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
     return () => { clearInterval(id); evs.forEach(ev => removeEventListener(ev, onAct)) }
   }, [paused])
 
-  /* ── driver selection (turns the earth to where the force trades) ────── */
-  const max = Math.max(...drivers.map(r => r.v), 1)
-  const sel = (r: Driver) => {
-    setCurDriver(r.n); setCurLevel(-1)
-    if (r.hub && geo.CITY[r.hub]) { earth.current?.focus(r.hub); setPick({ city: r.hub }) }
-    setRtHint(r.hub ? r.n + ' · ' + r.hub : r.n)
-  }
-
   const selLevel = (i: number) => {
-    setCurLevel(i); setCurDriver(null)
+    setCurLevel(i)
     const lv = levels[i]
     setRtHint(lv.n + ' $' + lv.p.toFixed(1))
   }
@@ -194,24 +186,9 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
       <div className="body">
         {/* left rail */}
         <div className="col">
-          <div className="card c-drivers">
-            <h2>Signal drivers<span className="r" id="rankHint">Click to locate the market</span></h2>
-            <div className="rank" id="rank">
-              {drivers.map((r, i) => (
-                <div className={'rk ' + (curDriver === r.n ? 'sel' : '')}
-                     data-n={r.n} data-hub={r.hub || ''} key={r.n}
-                     onClick={() => sel(r)}>
-                  <div className={'no ' + (i < 3 ? 't3' : '')}>{i + 1}</div>
-                  <div className="nm">{r.n}</div>
-                  <div className="track"><div className="fill" style={{
-                    width: r.v / max * 100 + '%',
-                    background: r.impact === 'bearish' ? 'var(--c5)' : r.impact === 'neutral' ? 'var(--muted)' : undefined }} /></div>
-                  <div className="v">{r.v}</div>
-                  <div className="p" style={{ color: r.impact === 'bearish' ? 'var(--c5)' : r.impact === 'bullish' ? 'var(--c3)' : 'var(--muted)' }}>
-                    {r.impact === 'bearish' ? 'BEAR' : r.impact === 'bullish' ? 'BULL' : 'NEUT'}</div>
-                </div>
-              ))}
-            </div>
+          <div className="card c-timing">
+            <h2>Intraday timing<span className="r">4H · 2H · 15M</span></h2>
+            <TimingBars timing={timing} />
           </div>
           <div className="card c-mix"><h2>Signal composition</h2><div className="chart" id="mix" /></div>
           <div className="card c-turn"><h2>Driver scores<span className="r">0–100</span></h2><div className="chart" id="turn" /></div>
@@ -246,7 +223,7 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
               {pick ? <>
                 <span>Selected hub</span><b>{pick.city}</b>
                 <span className="k">{pickedDriver ? 'Prices ' + pickedDriver.n : 'Bullion hub'}</span>
-                {curDriver && <span className="k">{drivers.find(d => d.n === curDriver)?.detail}</span>}
+                {pickedDriver && <span className="k">{pickedDriver.detail}</span>}
               </> : <>
                 <span>Hubs</span><b>{HUBS.length}</b>
                 <span className="k">

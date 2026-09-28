@@ -151,6 +151,24 @@ body{font:16px/1.4 var(--sans);color:var(--fg);-webkit-font-smoothing:antialiase
 .rk .v{font-size:17px;font-weight:650;font-variant-numeric:tabular-nums;width:76px;text-align:right}
 .rk .p{font-size:14px;width:48px;text-align:right;font-variant-numeric:tabular-nums}
 
+/* ── intraday timing bars (4H / 2H / 15M) ── */
+.timing{padding:4px 16px 12px;display:flex;flex-direction:column;justify-content:space-evenly;flex:1;overflow:hidden}
+.tmg{display:flex;flex-direction:column;gap:7px}
+.tmg .hd{display:flex;align-items:baseline;justify-content:space-between}
+.tmg .hd .nm{font-size:15px;color:var(--ink);font-weight:600}
+.tmg .hd .lean{font-size:12.5px;font-weight:650;letter-spacing:.03em;display:flex;align-items:baseline;gap:6px}
+.tmg .hd .lean b{font-variant-numeric:tabular-nums;font-weight:700}
+.tmg .hd .lean.bull{color:var(--c3)}
+.tmg .hd .lean.bear{color:var(--c5)}
+.tmg .hd .lean.neutral{color:var(--muted)}
+.tmg .track{display:flex;height:22px;border-radius:5px;overflow:hidden;background:var(--raised);border:1px solid var(--line)}
+.tmg .track>div{display:flex;align-items:center;min-width:0;transition:width .5s var(--ease)}
+.tmg .track .bull{background:linear-gradient(90deg,color-mix(in srgb,var(--c3) 65%,transparent),var(--c3));
+  justify-content:flex-end;padding-right:8px}
+.tmg .track .bear{background:linear-gradient(90deg,var(--c5),color-mix(in srgb,var(--c5) 65%,transparent));
+  justify-content:flex-start;padding-left:8px}
+.tmg .track span{font-size:11px;font-weight:700;color:#0b0803;font-variant-numeric:tabular-nums}
+
 /* ── route table ── */
 .routes{flex:1;overflow:hidden;padding:2px 16px 12px;display:flex;flex-direction:column;justify-content:space-evenly}
 .rt{display:flex;align-items:center;gap:9px;font-size:14.5px;cursor:pointer;padding:4px 6px;margin:0 -6px;
@@ -228,7 +246,7 @@ html.compact,html.compact body{height:auto;min-height:100%;overflow-x:hidden;ove
 .compact .col,.compact .mid{display:contents}
 .compact .kpibar{order:1;grid-template-columns:repeat(2,1fr);gap:8px}
 .compact .globe{order:2;height:min(96vw,440px,80vh);min-height:280px}
-.compact .c-drivers{order:3}
+.compact .c-timing{order:3}
 .compact .c-trend{order:4}
 .compact .c-levels{order:5}
 .compact .c-feed{order:6}
@@ -267,6 +285,8 @@ html.compact,html.compact body{height:auto;min-height:100%;overflow-x:hidden;ove
 .compact .rk .v{width:40px;font-size:16px}
 .compact .rk .p{width:44px;font-size:13px}
 .compact .rt{font-size:14px}
+.compact .timing{padding:6px 12px 10px;gap:2px}
+.compact .tmg .track{height:26px}
 .compact .al{font-size:13px;padding:6px 9px;align-items:flex-start}
 .compact .al .x{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .compact .al .lv{font-size:11px}
@@ -290,7 +310,7 @@ html.compact,html.compact body{height:auto;min-height:100%;overflow-x:hidden;ove
   .compact .kpibar,.compact .globe,.compact .c-trend{grid-column:1/-1}
   .compact .globe{height:min(70vw,520px,80vh)}
   .compact .c-trend{order:3}
-  .compact .c-drivers{order:4}
+  .compact .c-timing{order:4}
   .compact .c-levels{order:5}
   .compact .c-feed{order:6}
   .compact .c-mix{order:7}

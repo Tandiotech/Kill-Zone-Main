@@ -1,10 +1,13 @@
 /* Cockpit data model.
-   Everything on screen is derived from three backend payloads:
+   Everything on screen is derived from four backend payloads:
      GET /api/signal       → signal, drivers, key levels, basis
      GET /api/chart-data   → composite score history (scoreLine)
      GET /api/price-hourly → hourly gold closes for the centre chart
+     GET /api/score        → dominanceModes (4h/2h/15m intraday bull-bear split)
    Nothing here recomputes the signal or invents figures — it only reshapes
    what the backend decided. */
+
+import { buildDominanceModels, type DominanceModels } from "@/components/killzone-v2/dominance-models";
 
 export type Impact = 'bullish' | 'bearish' | 'neutral'
 
@@ -40,6 +43,17 @@ export interface ChartPayload {
 
 export interface HourlyPayload {
   candles: { time: number; close: number }[]
+}
+
+/** Minimal slice of GET /api/score — only the piece the timing bars need. */
+export interface ScoreApiPayload {
+  compositeScore?: number
+  dominanceModes?: {
+    macro?: { components?: { name: string; score: number; weight: number; contribution: number }[] }
+    intraday?: { components?: { name: string; score: number; weight: number; contribution: number }[]; lastSampleAt?: string }
+    intraday2h?: { components?: { name: string; score: number; weight: number; contribution: number }[]; lastSampleAt?: string }
+    intraday4h?: { components?: { name: string; score: number; weight: number; contribution: number }[]; lastSampleAt?: string }
+  }
 }
 
 export interface Kpi {
@@ -78,6 +92,9 @@ export interface Model {
   alerts: Alert[]
   candles: HourlyPayload['candles']
   scoreHistory: ChartPayload['scoreLine']
+  /** 4h / 2h / 15m intraday bull-bear split, for the left-rail timing bars. */
+  timing: DominanceModels
+  timingSampledAt: { fourH?: string; twoH?: string; fifteenM?: string }
 }
 
 /* Each driver is anchored to the market hub that prices it, so selecting a
@@ -127,7 +144,12 @@ function changeOver(candles: HourlyPayload['candles'], hours: number): number | 
   return +(((last.close - ref.close) / ref.close) * 100).toFixed(2)
 }
 
-export function buildModel(signal: SignalPayload, chart: ChartPayload | null, hourly: HourlyPayload | null): Model {
+export function buildModel(
+  signal: SignalPayload,
+  chart: ChartPayload | null,
+  hourly: HourlyPayload | null,
+  scoreApi: ScoreApiPayload | null,
+): Model {
   const candles = hourly?.candles ?? []
   const scoreHistory = chart?.scoreLine ?? []
   const price = signal.gold
@@ -167,5 +189,13 @@ export function buildModel(signal: SignalPayload, chart: ChartPayload | null, ho
       signal.basis.warning ? 'a' : 'b'],
   ]
 
-  return { signal, kpi, drivers, levels, alerts, candles, scoreHistory }
+  const dm = scoreApi?.dominanceModes
+  const timing = buildDominanceModels(scoreApi?.compositeScore ?? signal.score, dm)
+  const timingSampledAt = {
+    fourH: dm?.intraday4h?.lastSampleAt,
+    twoH: dm?.intraday2h?.lastSampleAt,
+    fifteenM: dm?.intraday?.lastSampleAt,
+  }
+
+  return { signal, kpi, drivers, levels, alerts, candles, scoreHistory, timing, timingSampledAt }
 }
