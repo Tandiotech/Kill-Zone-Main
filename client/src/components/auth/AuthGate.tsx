@@ -4,7 +4,7 @@ import { apiUrl } from "@/lib/apiBase";
 import { supabase, supabaseConfigured } from "@/lib/supabase";
 import { clearStoredAuthToken, getStoredAuthToken } from "@/lib/authToken";
 
-const PUBLIC_PATHS = new Set(["/login"]);
+const PUBLIC_PATHS = new Set(["/login", "/admin"]);
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [location] = useHashLocation();

@@ -10,7 +10,9 @@ import ChartPage from "@/pages/chart";
 import IntelligenceDashboardPage from "@/pages/intelligence-dashboard";
 import NotFound from "@/pages/not-found";
 import LoginPage from "@/pages/login";
+import AdminPage from "@/pages/admin";
 import { AuthGate } from "@/components/auth/AuthGate";
+import { AdminGate } from "@/components/auth/AdminGate";
 import { useEffect } from "react";
 
 function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -34,6 +36,11 @@ function AppRouter() {
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
+      <Route path="/admin">
+        <AdminGate>
+          <AdminPage />
+        </AdminGate>
+      </Route>
       <Route path="/" component={CockpitRedirect} />
       <Route path="/legacy" component={IntelligenceDashboardPage} />
       <Route path="/dashboard" component={Dashboard} />

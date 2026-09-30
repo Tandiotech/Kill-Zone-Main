@@ -3,11 +3,13 @@ import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 
 declare global {
   namespace Express {
     interface Request {
       authUser?: { email: string; sub: string };
+      adminUser?: { email: string };
     }
   }
 }
@@ -15,6 +17,12 @@ declare global {
 const SEND_COOLDOWN_MS = 15_000;
 const sendCooldown = new Map<string, number>();
 const APP_AUTH_TTL = "7d";
+const ADMIN_AUTH_TTL = "12h";
+const ADMIN_ISSUER = "gold-intel-admin";
+const ADMIN_AUDIENCE = "gold-intel-admin-client";
+const ADMIN_MAX_ATTEMPTS = 5;
+const ADMIN_LOCKOUT_MS = 15 * 60_000;
+const adminLoginAttempts = new Map<string, { count: number; firstAttemptAt: number }>();
 
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -262,6 +270,256 @@ export function requireAllowedUser(req: Request, res: Response, next: NextFuncti
       next();
     } catch (e) {
       console.error("[auth] requireAllowedUser:", e);
+      res.status(500).json({ message: "Authentication check failed." });
+    }
+  })();
+}
+
+
+export type AllowedUserRow = { id: string; email: string; added_at: string };
+
+export async function listAllowedUsers(): Promise<
+  { ok: true; users: AllowedUserRow[] } | { ok: false; status: number; message: string }
+> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return { ok: false, status: 503, message: "Authentication is not configured." };
+  const { data, error } = await admin
+    .from("allowed_users")
+    .select("id, email, added_at")
+    .order("added_at", { ascending: false });
+  if (error) {
+    console.error("[auth] allowed_users list:", error.message);
+    return { ok: false, status: 500, message: "Could not load the allow-list." };
+  }
+  return { ok: true, users: (data ?? []) as AllowedUserRow[] };
+}
+
+export async function addAllowedUser(
+  email: string,
+): Promise<{ ok: true; user: AllowedUserRow } | { ok: false; status: number; message: string }> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return { ok: false, status: 503, message: "Authentication is not configured." };
+  const normalized = normalizeEmail(email);
+  if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+    return { ok: false, status: 400, message: "Enter a valid email address." };
+  }
+
+  const { data, error } = await admin
+    .from("allowed_users")
+    .insert({ email: normalized } as never)
+    .select("id, email, added_at")
+    .single();
+
+  if (error) {
+    if (error.code === "23505") {
+      return { ok: false, status: 409, message: "That email is already on the list." };
+    }
+    console.error("[auth] allowed_users add:", error.message);
+    return { ok: false, status: 500, message: "Could not add the email." };
+  }
+
+  // Best-effort: create the Supabase auth user too, so the magic-link fallback works.
+  // Never blocks or fails the allow-list write.
+  try {
+    await admin.auth.admin.createUser({ email: normalized, email_confirm: true });
+  } catch (e) {
+    console.error("[auth] allowed_users add (auth.createUser):", e);
+  }
+
+  return { ok: true, user: data as AllowedUserRow };
+}
+
+export async function updateAllowedUserEmail(
+  id: string,
+  email: string,
+): Promise<{ ok: true; user: AllowedUserRow } | { ok: false; status: number; message: string }> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return { ok: false, status: 503, message: "Authentication is not configured." };
+  const normalized = normalizeEmail(email);
+  if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+    return { ok: false, status: 400, message: "Enter a valid email address." };
+  }
+
+  const { data, error } = await admin
+    .from("allowed_users")
+    .update({ email: normalized } as never)
+    .eq("id", id)
+    .select("id, email, added_at")
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === "23505") {
+      return { ok: false, status: 409, message: "That email is already on the list." };
+    }
+    console.error("[auth] allowed_users update:", error.message);
+    return { ok: false, status: 500, message: "Could not update the email." };
+  }
+  if (!data) {
+    return { ok: false, status: 404, message: "Not found." };
+  }
+
+  return { ok: true, user: data as AllowedUserRow };
+}
+
+export async function deleteAllowedUser(
+  id: string,
+): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
+  const admin = getSupabaseAdmin();
+  if (!admin) return { ok: false, status: 503, message: "Authentication is not configured." };
+  const { error } = await admin.from("allowed_users").delete().eq("id", id);
+  if (error) {
+    console.error("[auth] allowed_users delete:", error.message);
+    return { ok: false, status: 500, message: "Could not remove the email." };
+  }
+  return { ok: true };
+}
+
+const SCRYPT_KEYLEN = 64;
+
+export function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16);
+  const hash = crypto.scryptSync(password, salt, SCRYPT_KEYLEN);
+  return `scrypt:${salt.toString("hex")}:${hash.toString("hex")}`;
+}
+
+export function verifyPassword(password: string, stored: string): boolean {
+  const parts = stored.split(":");
+  if (parts.length !== 3 || parts[0] !== "scrypt") return false;
+  const [, saltHex, hashHex] = parts;
+  try {
+    const salt = Buffer.from(saltHex, "hex");
+    const expected = Buffer.from(hashHex, "hex");
+    const actual = crypto.scryptSync(password, salt, SCRYPT_KEYLEN);
+    return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
+  } catch {
+    return false;
+  }
+}
+
+export function checkAdminLockout(email: string): { locked: true; retryAfterMs: number } | { locked: false } {
+  const rec = adminLoginAttempts.get(email);
+  if (!rec) return { locked: false };
+  const elapsed = Date.now() - rec.firstAttemptAt;
+  if (elapsed > ADMIN_LOCKOUT_MS) {
+    adminLoginAttempts.delete(email);
+    return { locked: false };
+  }
+  if (rec.count >= ADMIN_MAX_ATTEMPTS) {
+    return { locked: true, retryAfterMs: ADMIN_LOCKOUT_MS - elapsed };
+  }
+  return { locked: false };
+}
+
+export function recordAdminFailure(email: string): void {
+  const now = Date.now();
+  const rec = adminLoginAttempts.get(email);
+  if (!rec || now - rec.firstAttemptAt > ADMIN_LOCKOUT_MS) {
+    adminLoginAttempts.set(email, { count: 1, firstAttemptAt: now });
+    return;
+  }
+  rec.count += 1;
+}
+
+function clearAdminFailures(email: string): void {
+  adminLoginAttempts.delete(email);
+}
+
+export async function issueAdminLoginIfValid(
+  email: string,
+  password: string,
+): Promise<{ ok: true; token: string; email: string } | { ok: false; status: number; message: string }> {
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return { ok: false, status: 503, message: "Authentication is not configured." };
+  }
+
+  const normalized = normalizeEmail(email);
+  if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized) || !password) {
+    return { ok: false, status: 400, message: "Enter a valid email and password." };
+  }
+
+  const lockout = checkAdminLockout(normalized);
+  if (lockout.locked) {
+    return {
+      ok: false,
+      status: 429,
+      message: `Too many attempts. Try again in ${Math.ceil(lockout.retryAfterMs / 60_000)} minute(s).`,
+    };
+  }
+
+  const { data, error } = await admin
+    .from("admin_users")
+    .select("email, password_hash")
+    .eq("email", normalized)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[auth] admin_users:", error.message);
+    return { ok: false, status: 500, message: "Login failed. Try again." };
+  }
+
+  const row = data as { email: string; password_hash: string } | null;
+  if (!row || !verifyPassword(password, row.password_hash)) {
+    recordAdminFailure(normalized);
+    return { ok: false, status: 401, message: "Invalid email or password." };
+  }
+
+  clearAdminFailures(normalized);
+
+  const secret = getAppAuthSecret();
+  if (!secret) {
+    return { ok: false, status: 503, message: "Authentication is not configured." };
+  }
+
+  const token = jwt.sign({ typ: "admin", email: normalized }, secret, {
+    expiresIn: ADMIN_AUTH_TTL,
+    issuer: ADMIN_ISSUER,
+    audience: ADMIN_AUDIENCE,
+    subject: normalized,
+  });
+
+  return { ok: true, token, email: normalized };
+}
+
+export async function validateAdminBearer(
+  authHeader: string | undefined,
+): Promise<{ ok: true; email: string } | { ok: false; status: 401 }> {
+  const raw = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  if (!raw) return { ok: false, status: 401 };
+
+  const secret = getAppAuthSecret();
+  if (!secret) return { ok: false, status: 401 };
+
+  try {
+    const decoded = jwt.verify(raw, secret, {
+      issuer: ADMIN_ISSUER,
+      audience: ADMIN_AUDIENCE,
+    }) as jwt.JwtPayload;
+    if (decoded.typ === "admin" && typeof decoded.email === "string") {
+      return { ok: true, email: decoded.email };
+    }
+    return { ok: false, status: 401 };
+  } catch {
+    return { ok: false, status: 401 };
+  }
+}
+
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  void (async () => {
+    try {
+      if (!getSupabaseAdmin()) {
+        res.status(503).json({ message: "Authentication is not configured." });
+        return;
+      }
+      const r = await validateAdminBearer(req.headers.authorization);
+      if (!r.ok) {
+        res.status(r.status).json({ message: "Unauthorized" });
+        return;
+      }
+      req.adminUser = { email: r.email };
+      next();
+    } catch (e) {
+      console.error("[auth] requireAdmin:", e);
       res.status(500).json({ message: "Authentication check failed." });
     }
   })();

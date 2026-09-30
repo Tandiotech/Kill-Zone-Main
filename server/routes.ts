@@ -14,9 +14,16 @@ import {
   type LiveScoreData,
 } from "./live-data.js";
 import {
+  addAllowedUser,
+  deleteAllowedUser,
+  issueAdminLoginIfValid,
   issueDirectLoginIfAllowed,
+  listAllowedUsers,
+  requireAdmin,
   requireAllowedUser,
   sendMagicLinkIfAllowed,
+  updateAllowedUserEmail,
+  validateAdminBearer,
   validateBearerAndAllowlist,
 } from "./auth.js";
 import { enrichComponentsWithFactorDetails } from "./factor-narrative.js";
@@ -686,11 +693,60 @@ export async function registerRoutes(
     return res.json({ user: { email: r.email } });
   });
 
+  app.post("/api/admin/login", async (req, res) => {
+    const email = typeof req.body?.email === "string" ? req.body.email : "";
+    const password = typeof req.body?.password === "string" ? req.body.password : "";
+    const result = await issueAdminLoginIfValid(email, password);
+    if (!result.ok) {
+      return res.status(result.status).json({ message: result.message });
+    }
+    return res.json({
+      token: result.token,
+      user: { email: result.email },
+      message: "Access granted.",
+    });
+  });
+
+  app.get("/api/admin/session", async (req, res) => {
+    const r = await validateAdminBearer(req.headers.authorization);
+    if (!r.ok) {
+      return res.status(r.status).json({ message: "Unauthorized" });
+    }
+    return res.json({ user: { email: r.email } });
+  });
+
+  app.get("/api/admin/allowed-users", requireAdmin, async (_req, res) => {
+    const result = await listAllowedUsers();
+    if (!result.ok) return res.status(result.status).json({ message: result.message });
+    return res.json({ users: result.users });
+  });
+
+  app.post("/api/admin/allowed-users", requireAdmin, async (req, res) => {
+    const email = typeof req.body?.email === "string" ? req.body.email : "";
+    const result = await addAllowedUser(email);
+    if (!result.ok) return res.status(result.status).json({ message: result.message });
+    return res.status(201).json({ user: result.user });
+  });
+
+  app.patch("/api/admin/allowed-users/:id", requireAdmin, async (req, res) => {
+    const email = typeof req.body?.email === "string" ? req.body.email : "";
+    const result = await updateAllowedUserEmail(String(req.params.id), email);
+    if (!result.ok) return res.status(result.status).json({ message: result.message });
+    return res.json({ user: result.user });
+  });
+
+  app.delete("/api/admin/allowed-users/:id", requireAdmin, async (req, res) => {
+    const result = await deleteAllowedUser(String(req.params.id));
+    if (!result.ok) return res.status(result.status).json({ message: result.message });
+    return res.status(204).end();
+  });
+
   app.use((req, res, next) => {
     if (!req.path.startsWith("/api")) return next();
     if (req.path === "/api/auth/send-magic-link" && req.method === "POST") return next();
     if (req.path === "/api/auth/login" && req.method === "POST") return next();
     if (req.path === "/api/auth/session" && req.method === "GET") return next();
+    if (req.path.startsWith("/api/admin/")) return next();
     return requireAllowedUser(req, res, next);
   });
 
