@@ -157,6 +157,12 @@ type NarrativeCache = {
 
 const MARKET_MOVE_THRESHOLD_PCT = 0.3;
 const MARKET_STALE_MS = 2 * 60 * 1000;
+/* The client polls /api/market-narratives every 90s; without this cache each
+   poll re-hit newsapi.org directly, which exhausts the free-tier 100
+   req/day quota in under 3 hours from a single open tab. Headlines don't
+   change meaningfully inside this window, so one upstream fetch covers it. */
+const NEWS_CACHE_TTL_MS = 10 * 60 * 1000;
+let newsCache: { at: number; headlines: NewsHeadline[] } | null = null;
 const NEWS_QUERY =
   '(gold OR inflation OR "federal reserve" OR "interest rates" OR geopolitics) AND (gold OR XAU)';
 const NEWS_DOMAINS = [
@@ -316,6 +322,10 @@ function fallbackNewsImage(source: string): string {
 }
 
 async function fetchMarketNews(): Promise<NewsHeadline[]> {
+  if (newsCache && Date.now() - newsCache.at < NEWS_CACHE_TTL_MS) {
+    return newsCache.headlines;
+  }
+
   const apiKey = process.env.NEWS_API_KEY;
   const out: NewsHeadline[] = [];
 
@@ -399,7 +409,7 @@ async function fetchMarketNews(): Promise<NewsHeadline[]> {
 
   // Deduplicate by normalized title; keep newest first
   const seen = new Set<string>();
-  return out
+  const headlines = out
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
     .filter((h) => {
       const key = h.title.toLowerCase().replace(/\s+/g, " ").trim();
@@ -408,6 +418,9 @@ async function fetchMarketNews(): Promise<NewsHeadline[]> {
       return true;
     })
     .slice(0, 8);
+
+  newsCache = { at: Date.now(), headlines };
+  return headlines;
 }
 
 function reuseIfUnchanged(slideId: string, candidate: string): string {
