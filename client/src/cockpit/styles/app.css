@@ -153,21 +153,38 @@ body{font:16px/1.4 var(--sans);color:var(--fg);-webkit-font-smoothing:antialiase
 
 /* ── intraday timing bars (4H / 2H / 15M) ── */
 .timing{padding:4px 16px 12px;display:flex;flex-direction:column;justify-content:space-evenly;flex:1;overflow:hidden}
-.tmg{display:flex;flex-direction:column;gap:7px}
-.tmg .hd{display:flex;align-items:baseline;justify-content:space-between}
-.tmg .hd .nm{font-size:15px;color:var(--ink);font-weight:600}
-.tmg .hd .lean{font-size:12.5px;font-weight:650;letter-spacing:.03em;display:flex;align-items:baseline;gap:6px}
-.tmg .hd .lean b{font-variant-numeric:tabular-nums;font-weight:700}
-.tmg .hd .lean.bull{color:var(--c3)}
-.tmg .hd .lean.bear{color:var(--c5)}
-.tmg .hd .lean.neutral{color:var(--muted)}
-.tmg .track{display:flex;height:22px;border-radius:5px;overflow:hidden;background:var(--raised);border:1px solid var(--line)}
-.tmg .track>div{display:flex;align-items:center;min-width:0;transition:width .5s var(--ease)}
-.tmg .track .bull{background:linear-gradient(90deg,color-mix(in srgb,var(--c3) 65%,transparent),var(--c3));
-  justify-content:flex-end;padding-right:8px}
-.tmg .track .bear{background:linear-gradient(90deg,var(--c5),color-mix(in srgb,var(--c5) 65%,transparent));
-  justify-content:flex-start;padding-left:8px}
-.tmg .track span{font-size:11px;font-weight:700;color:#0b0803;font-variant-numeric:tabular-nums}
+.tmg{display:flex;flex-direction:column;gap:7px;position:relative;padding:7px 9px;border-radius:7px;overflow:hidden}
+.tmg:before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 75% 120% at 0% 50%,color-mix(in srgb,var(--c3) 9%,transparent),transparent 60%),
+             radial-gradient(ellipse 75% 120% at 100% 50%,color-mix(in srgb,var(--c5) 9%,transparent),transparent 60%)}
+.tmg .hd{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+.tmg .hd .nm{font-size:15px;color:var(--ink);font-weight:650;letter-spacing:.01em;display:flex;align-items:baseline;gap:7px}
+.tmg .hd .nm .fresh{font-size:9.5px;font-weight:500;font-family:var(--mono);color:var(--dim);letter-spacing:.03em}
+.tmg .hd .lean{font-size:11px;font-weight:700;letter-spacing:.05em;display:flex;align-items:center;gap:6px;
+  padding:4px 10px;border-radius:99px;border:1px solid transparent;white-space:nowrap}
+.tmg .hd .lean b{font-variant-numeric:tabular-nums;font-weight:700;opacity:.85}
+.tmg .hd .lean.bull{color:var(--c3);background:color-mix(in srgb,var(--c3) 15%,transparent);
+  border-color:color-mix(in srgb,var(--c3) 38%,transparent);
+  box-shadow:0 0 12px color-mix(in srgb,var(--c3) 30%,transparent),inset 0 1px 0 color-mix(in srgb,var(--c3) 20%,transparent);
+  text-shadow:0 0 12px color-mix(in srgb,var(--c3) 45%,transparent)}
+.tmg .hd .lean.bear{color:var(--c5);background:color-mix(in srgb,var(--c5) 15%,transparent);
+  border-color:color-mix(in srgb,var(--c5) 38%,transparent);
+  box-shadow:0 0 12px color-mix(in srgb,var(--c5) 30%,transparent),inset 0 1px 0 color-mix(in srgb,var(--c5) 20%,transparent);
+  text-shadow:0 0 12px color-mix(in srgb,var(--c5) 45%,transparent)}
+.tmg .hd .lean.neutral{color:var(--muted);background:color-mix(in srgb,var(--muted) 12%,transparent);border-color:var(--line)}
+.tmg .track{display:flex;height:24px;border-radius:6px;overflow:hidden;background:var(--raised);
+  border:1px solid var(--line);position:relative;z-index:1}
+.tmg .track:after{content:'';position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;transform:translateX(-50%);
+  background:color-mix(in srgb,var(--ink) 35%,transparent);z-index:2;border-radius:1px}
+.tmg .track>div{display:flex;align-items:center;min-width:0;transition:width .6s var(--ease);position:relative}
+.tmg .track .bull{background:linear-gradient(90deg,color-mix(in srgb,var(--c3) 38%,var(--bg)),var(--c3));
+  justify-content:flex-end;padding-right:9px;
+  box-shadow:inset 0 0 16px color-mix(in srgb,#fff 18%,transparent),0 0 14px color-mix(in srgb,var(--c3) 35%,transparent)}
+.tmg .track .bear{background:linear-gradient(90deg,var(--c5),color-mix(in srgb,var(--c5) 38%,var(--bg)));
+  justify-content:flex-start;padding-left:9px;
+  box-shadow:inset 0 0 16px color-mix(in srgb,#fff 18%,transparent),0 0 14px color-mix(in srgb,var(--c5) 35%,transparent)}
+.tmg .track span{font-size:11.5px;font-weight:750;color:#0b0803;font-variant-numeric:tabular-nums;
+  text-shadow:0 1px 0 color-mix(in srgb,#fff 35%,transparent)}
 
 /* ── route table ── */
 .routes{flex:1;overflow:hidden;padding:2px 16px 12px;display:flex;flex-direction:column;justify-content:space-evenly}

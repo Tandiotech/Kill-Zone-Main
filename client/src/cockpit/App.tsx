@@ -41,7 +41,7 @@ export default function App() {
 }
 
 function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; lastOk: number }) {
-  const { signal, kpi, drivers, levels, alerts, timing } = model
+  const { signal, kpi, drivers, levels, alerts, timing, timingSampledAt } = model
 
   const [curLevel, setCurLevel] = useState(-1)
   const [pick, setPick] = useState<{ city: string } | null>(null)
@@ -188,7 +188,7 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
         <div className="col">
           <div className="card c-timing">
             <h2>Intraday timing<span className="r">4H · 2H · 15M</span></h2>
-            <TimingBars timing={timing} />
+            <TimingBars timing={timing} sampledAt={timingSampledAt} />
           </div>
           <div className="card c-mix"><h2>Signal composition</h2><div className="chart" id="mix" /></div>
           <div className="card c-turn"><h2>Driver scores<span className="r">0–100</span></h2><div className="chart" id="turn" /></div>
