@@ -13,24 +13,22 @@ async function prepareAuthRedirect(): Promise<void> {
   if (url.searchParams.has("code")) {
     const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
     if (error) console.error("[auth] exchangeCodeForSession:", error.message);
-    url.search = "";
-    url.hash = "#/";
-    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    window.history.replaceState(null, "", "/");
     return;
   }
 
+  // Supabase's implicit/magic-link flow delivers the session in the URL
+  // fragment (#access_token=...). That's unrelated to app routing — just
+  // strip it once consumed so it doesn't linger in the address bar.
   const h = window.location.hash;
   if (h.includes("access_token") || h.includes("type=magiclink")) {
     await supabase.auth.getSession();
-    window.history.replaceState(null, "", `${window.location.pathname}#/`);
+    window.history.replaceState(null, "", "/");
   }
 }
 
 async function boot() {
   await prepareAuthRedirect();
-  if (!window.location.hash) {
-    window.location.hash = "#/";
-  }
   createRoot(document.getElementById("root")!).render(<App />);
 }
 

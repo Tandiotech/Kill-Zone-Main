@@ -2,6 +2,7 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { apiUrl } from "./apiBase";
 import { clearStoredAuthToken, getStoredAuthToken } from "./authToken";
 import { getAccessToken, supabase } from "./supabase";
+import { goToLogin } from "./nav";
 
 async function authHeaders(): Promise<Record<string, string>> {
   const localToken = getStoredAuthToken();
@@ -14,9 +15,8 @@ async function redirectIfAuthFailed(res: Response) {
   if (res.status !== 401 && res.status !== 403) return;
   clearStoredAuthToken();
   await supabase.auth.signOut();
-  const h = window.location.hash || "";
-  if (!h.includes("login")) {
-    window.location.hash = "#/login";
+  if (window.location.pathname !== "/login") {
+    goToLogin();
   }
 }
 

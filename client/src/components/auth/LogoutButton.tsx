@@ -1,3 +1,4 @@
+import { useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
 import { clearStoredAuthToken } from "@/lib/authToken";
 import { LogOut } from "lucide-react";
@@ -8,6 +9,8 @@ type Props = {
 };
 
 export function LogoutButton({ className = "", compact }: Props) {
+  const [, navigate] = useLocation();
+
   return (
     <button
       type="button"
@@ -18,7 +21,7 @@ export function LogoutButton({ className = "", compact }: Props) {
       onClick={async () => {
         clearStoredAuthToken();
         await supabase.auth.signOut();
-        window.location.hash = "#/login";
+        navigate("/login");
       }}
       data-testid="button-logout"
     >

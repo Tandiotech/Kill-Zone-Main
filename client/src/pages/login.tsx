@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { apiUrl } from "@/lib/apiBase";
 import {
   getStoredAdminToken,
@@ -189,6 +190,7 @@ const SCOPE_CSS = `
 `;
 
 export default function LoginPage() {
+  const [, navigate] = useLocation();
   const [mode, setMode] = useState<Mode>("user");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -243,7 +245,7 @@ export default function LoginPage() {
     setStatus("success");
     setMessage("Access granted. Redirecting…");
     setTimeout(() => {
-      window.location.hash = "#/";
+      navigate("/");
     }, 300);
   }
 
@@ -282,7 +284,7 @@ export default function LoginPage() {
     setStatus("success");
     setMessage("Access granted. Redirecting…");
     setTimeout(() => {
-      window.location.hash = "#/admin";
+      navigate("/admin");
     }, 300);
   }
 

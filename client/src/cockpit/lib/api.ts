@@ -2,10 +2,10 @@ import { apiUrl } from '@/lib/apiBase'
 import { clearStoredAuthToken, getStoredAuthToken } from '@/lib/authToken'
 import { getAccessToken, supabase } from '@/lib/supabase'
 
-/* The login screen lives in the main app at "#/login" (same origin, one level
+/* The login screen lives in the main app at "/login" (same origin, one level
    up from this page), so a rejected session sends the user back there. */
 export function goToLogin() {
-  window.location.replace('./#/login')
+  window.location.replace('/login')
 }
 
 export async function signOut() {

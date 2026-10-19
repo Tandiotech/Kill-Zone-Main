@@ -11,8 +11,8 @@ const navItems = [
   { label: "About", icon: Info, target: "about-section" },
 ];
 
-const signalLink = { label: "Signal", icon: Zap, href: "#/signal" };
-const chartLink = { label: "Chart", icon: BarChart2, href: "#/chart" };
+const signalLink = { label: "Signal", icon: Zap, href: "/signal" };
+const chartLink = { label: "Chart", icon: BarChart2, href: "/chart" };
 
 export function DashboardSidebar({ onClose }: { onClose: () => void }) {
   const scrollTo = (id: string) => {

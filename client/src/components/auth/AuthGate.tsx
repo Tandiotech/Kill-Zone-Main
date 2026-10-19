@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useHashLocation } from "wouter/use-hash-location";
+import { useLocation } from "wouter";
 import { apiUrl } from "@/lib/apiBase";
 import { supabase, supabaseConfigured } from "@/lib/supabase";
 import { clearStoredAuthToken, getStoredAuthToken } from "@/lib/authToken";
@@ -7,7 +7,7 @@ import { clearStoredAuthToken, getStoredAuthToken } from "@/lib/authToken";
 const PUBLIC_PATHS = new Set(["/login", "/admin"]);
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
-  const [location] = useHashLocation();
+  const [location, navigate] = useLocation();
   const [ready, setReady] = useState(false);
   const [allowed, setAllowed] = useState(false);
 
@@ -42,7 +42,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         if (!cancelled) {
           setAllowed(false);
           setReady(true);
-          window.location.hash = "#/login";
+          navigate("/login");
         }
         return;
       }
@@ -55,7 +55,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         if (!cancelled) {
           setAllowed(false);
           setReady(true);
-          window.location.hash = "#/login";
+          navigate("/login");
         }
         return;
       }
@@ -70,7 +70,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         if (!cancelled) {
           setAllowed(false);
           setReady(true);
-          window.location.hash = "#/login";
+          navigate("/login");
         }
         return;
       }

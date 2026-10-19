@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Check, LogOut, Pencil, Plus, ShieldCheck, Trash2, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiBase";
 import { clearStoredAdminToken, getStoredAdminToken } from "@/lib/authToken";
+import { goToLogin } from "@/lib/nav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,12 +40,13 @@ async function adminFetch(path: string, init?: RequestInit): Promise<Response> {
   });
   if (res.status === 401) {
     clearStoredAdminToken();
-    window.location.hash = "#/login";
+    goToLogin();
   }
   return res;
 }
 
 export default function AdminPage() {
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const [users, setUsers] = useState<AllowedUser[] | null>(null);
   const [newEmail, setNewEmail] = useState("");
@@ -174,7 +177,7 @@ export default function AdminPage() {
             className="cursor-pointer gap-1.5"
             onClick={() => {
               clearStoredAdminToken();
-              window.location.hash = "#/login";
+              navigate("/login");
             }}
           >
             <LogOut className="h-3.5 w-3.5" />

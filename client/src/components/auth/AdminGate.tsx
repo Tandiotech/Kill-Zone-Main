@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { apiUrl } from "@/lib/apiBase";
 import { clearStoredAdminToken, getStoredAdminToken } from "@/lib/authToken";
 
 export function AdminGate({ children }: { children: React.ReactNode }) {
+  const [, navigate] = useLocation();
   const [ready, setReady] = useState(false);
   const [allowed, setAllowed] = useState(false);
 
@@ -15,7 +17,7 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
         if (!cancelled) {
           setAllowed(false);
           setReady(true);
-          window.location.hash = "#/login";
+          navigate("/login");
         }
         return;
       }
@@ -29,7 +31,7 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
         if (!cancelled) {
           setAllowed(false);
           setReady(true);
-          window.location.hash = "#/login";
+          navigate("/login");
         }
         return;
       }
