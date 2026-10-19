@@ -35,8 +35,13 @@ export async function setupVite(server: Server, app: Express) {
     const url = req.originalUrl;
 
     try {
-      // The command-center UI is a second HTML entry; everything else is the main app.
-      const page_ = url.split(/[?#]/)[0] === "/cockpit.html" ? "cockpit.html" : "index.html";
+      // The command-center UI is served directly at "/" (no .html in the
+      // address bar, no client-side redirect) as well as its own literal
+      // /cockpit.html; everything else is the main app.
+      const reqPath = url.split(/[?#]/)[0];
+      const isCockpit = reqPath === "/" || reqPath === "/cockpit.html";
+      const page_ = isCockpit ? "cockpit.html" : "index.html";
+      const entry = isCockpit ? "/src/cockpit/main.tsx" : "/src/main.tsx";
       const clientTemplate = path.resolve(
         import.meta.dirname,
         "..",
@@ -47,8 +52,8 @@ export async function setupVite(server: Server, app: Express) {
       // always reload the index.html file from disk incase it changes
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
-        `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`,
+        `src="${entry}"`,
+        `src="${entry}?v=${nanoid()}"`,
       );
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);

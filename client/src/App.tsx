@@ -23,7 +23,11 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-/** The command-center UI is its own page (cockpit.html) so its global styles stay out of this app. */
+/** The command-center UI is its own page (cockpit.html) so its global styles stay out
+   of this app. The server already serves cockpit.html directly for a fresh visit to
+   "/" (see server/static.ts and server/vite.ts) — this component only fires when "/"
+   is reached by an in-app navigation (e.g. right after login), where a fresh server
+   request never happens and something has to hand off to the cockpit's own bundle. */
 function CockpitRedirect() {
   useEffect(() => {
     window.location.replace("./cockpit.html");
