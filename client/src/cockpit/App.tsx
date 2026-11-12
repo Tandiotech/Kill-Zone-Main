@@ -4,6 +4,7 @@ import { constellation } from './lib/fx.js'
 import * as geo from './lib/geo.js'
 import { charts, draw, renderRest, trendOpt } from './lib/charts.js'
 import { signOut } from './lib/api'
+import { isRyseEmbed } from './lib/embed'
 import { useCockpit } from './lib/useCockpit'
 import { HUBS, TOUR, sessionLabel, type Model } from './lib/model'
 import { TimingBars } from './TimingBars'
@@ -172,9 +173,11 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
           <span>{signal.tradeZone}</span>
         </div>
         <div className="spacer" />
-        <button type="button" className="affil" style={{ cursor: 'pointer', font: 'inherit', fontSize: 13,
-                letterSpacing: '.12em', fontWeight: 650 }} onClick={() => void signOut()}>
-          SIGN OUT</button>
+        {!isRyseEmbed() && (
+          <button type="button" className="affil" style={{ cursor: 'pointer', font: 'inherit', fontSize: 13,
+                  letterSpacing: '.12em', fontWeight: 650 }} onClick={() => void signOut()}>
+            SIGN OUT</button>
+        )}
         <div className={'live' + (live ? '' : ' off')} id="live">
           <span className="blip" />
           <span id="liveTxt">

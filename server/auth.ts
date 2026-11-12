@@ -249,9 +249,57 @@ export async function validateBearerAndAllowlist(
   return { ok: true, email: user.email, sub: user.id };
 }
 
+/** RYSE GLOBAL mints these so a signed-in member can open the cockpit without Killzone login. */
+export const RYSE_EMBED_ISS = "ryse-global";
+export const RYSE_EMBED_AUD = "killzone-embed";
+const COCKPIT_EMBED_GET = new Set([
+  "/api/signal",
+  "/api/chart-data",
+  "/api/price-hourly",
+  "/api/score",
+]);
+
+function getRyseEmbedSecret(): string | null {
+  loadDotEnvOnce();
+  const secret = process.env.RYSE_EMBED_SECRET?.trim();
+  return secret || null;
+}
+
+export function isCockpitEmbedPath(method: string, path: string): boolean {
+  return method === "GET" && COCKPIT_EMBED_GET.has(path);
+}
+
+export function validateRyseEmbedBearer(
+  authHeader: string | undefined,
+): { ok: true; email: string; sub: string } | { ok: false } {
+  const raw = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  const secret = getRyseEmbedSecret();
+  if (!raw || !secret) return { ok: false };
+  try {
+    const decoded = jwt.verify(raw, secret, {
+      issuer: RYSE_EMBED_ISS,
+      audience: RYSE_EMBED_AUD,
+    }) as jwt.JwtPayload;
+    if (decoded.typ !== "ryse-embed" || typeof decoded.email !== "string") return { ok: false };
+    return { ok: true, email: decoded.email, sub: String(decoded.sub || decoded.email) };
+  } catch {
+    return { ok: false };
+  }
+}
+
 export function requireAllowedUser(req: Request, res: Response, next: NextFunction) {
   void (async () => {
     try {
+      const embed = validateRyseEmbedBearer(req.headers.authorization);
+      if (embed.ok) {
+        if (!isCockpitEmbedPath(req.method, req.path)) {
+          res.status(403).json({ message: "Unauthorized" });
+          return;
+        }
+        req.authUser = { email: embed.email, sub: embed.sub };
+        next();
+        return;
+      }
       if (!getSupabaseAdmin()) {
         res.status(503).json({ message: "Authentication is not configured." });
         return;
