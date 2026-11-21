@@ -891,8 +891,17 @@ export async function fetchAndComputeLiveScore(): Promise<LiveScoreData> {
     // cancelled by still-negative longer-window structure mid-rally.
     const accel = roc1h - roc4h;
 
+    // A 15m print running opposite to the 1h trend reads as a bounce, not a
+    // reversal — e.g. a sharp sell-off hitting support and snapping back for
+    // a few minutes shouldn't swing this row to a confident BULLISH print.
+    // Damp it; a 15m move that confirms the 1h direction keeps full weight so
+    // genuine accelerating moves still register fast.
+    const bounceAgainstTrend =
+      roc1h !== 0 && roc15m !== 0 && Math.sign(roc15m) !== Math.sign(roc1h);
+    const roc15mWeighted = bounceAgainstTrend ? roc15m * 0.35 : roc15m;
+
     // Softer coeffs than raw tape — 15m alone shouldn't whip the bar red/green.
-    const xauImpulseScore = clamp(50 + roc15m * 45 + roc1h * 50, 0, 100);
+    const xauImpulseScore = clamp(50 + roc15mWeighted * 45 + roc1h * 50, 0, 100);
     const xauAccelerationScore = clamp(50 + accel * 25 + roc4h * 30, 0, 100);
     const usdPulseScore = clamp(50 - latestUSDRoc * 45, 0, 100);
     const yieldPulseScore = clamp(50 - latestRYChange * 30, 0, 100);
