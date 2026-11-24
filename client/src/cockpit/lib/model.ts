@@ -98,7 +98,7 @@ export interface Model {
 }
 
 /* Each driver is anchored to the market hub that prices it, so selecting a
-   driver turns the earth to where that force trades. */
+   driver turns the earth to where that force trades (standalone Killzone only). */
 export const DRIVER_HUB: Record<string, string> = {
   'USD Strength': 'New York',
   'Bond Yields': 'London',
@@ -123,8 +123,35 @@ const SESSIONS = [
   { name: 'New York', from: 13, to: 21, hub: 'New York' },
 ]
 
+/* The three gold killzones: first three hours of each session, UTC.
+   These are the windows the centre chart is meant to help people trade. */
+export const KILLZONES = [
+  { name: 'Asia', from: 0, to: 3, tone: 'asia' },
+  { name: 'London', from: 7, to: 10, tone: 'london' },
+  { name: 'New York', from: 13, to: 16, tone: 'ny' },
+] as const
+
+export type KillzoneWindow = (typeof KILLZONES)[number]
+
+export function utcHour(d = new Date()): number {
+  return d.getUTCHours() + d.getUTCMinutes() / 60
+}
+
+export function killzoneAt(d = new Date()): {
+  live: KillzoneWindow | null
+  next: KillzoneWindow
+  mins: number
+} {
+  const h = utcHour(d)
+  const live = KILLZONES.find(k => h >= k.from && h < k.to) ?? null
+  if (live) return { live, next: live, mins: Math.max(0, Math.round((live.to - h) * 60)) }
+  const upcoming = KILLZONES.find(k => h < k.from) ?? KILLZONES[0]
+  const start = h < upcoming.from ? upcoming.from : upcoming.from + 24
+  return { live: null, next: upcoming, mins: Math.max(0, Math.round((start - h) * 60)) }
+}
+
 export const sessionNow = (d = new Date()) => {
-  const h = d.getUTCHours() + d.getUTCMinutes() / 60
+  const h = utcHour(d)
   const active = SESSIONS.filter(s => h >= s.from && h < s.to)
   return active.length ? active[active.length - 1] : null
 }

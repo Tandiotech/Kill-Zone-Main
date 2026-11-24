@@ -2,10 +2,9 @@
    change only changes the scale factor, never the layout — a wall screen whose
    panels moved would have to be re-framed on site.
 
-   Visually this is a command screen, not a web page: an interactive 3D earth
-   in the centre, data rails on both wings. The 3D piece does navigation work
-   (click a city / a route → drill down), not decoration — decorative 3D on a
-   wall screen only steals attention from the readouts. */
+   Visually this is a command screen, not a web page. Standalone Killzone keeps
+   the 3D earth in the centre. The RYSE embed swaps that for live gold candles
+   with killzone windows, so a person on RYSE can see when gold actually moves. */
 :root{
   --bg:#070604; --panel:#0e0c08; --raised:#171410; --ink:#f0e9db; --muted:#948a76; --faint:#5c5546;
   --line:#241f16; --line-soft:#1b1712;
@@ -79,7 +78,7 @@ body{font:16px/1.4 var(--sans);color:var(--fg);-webkit-font-smoothing:antialiase
   background:color-mix(in srgb,var(--c1) 9%,transparent);padding:6px 13px;border-radius:99px;margin-right:10px}
 @keyframes bl{0%,100%{opacity:1}50%{opacity:.25}}
 
-/* ── three columns: two data rails flanking the 3D hero ── */
+/* ── three columns: two data rails flanking the gold chart ── */
 .body{flex:1;min-height:0;padding:14px 30px 22px;display:grid;gap:14px;
       grid-template-columns:432px 1fr 432px;position:relative;z-index:2}
 .col{display:grid;gap:14px;grid-template-rows:1fr 1fr 1fr;min-height:0}
@@ -114,11 +113,31 @@ body{font:16px/1.4 var(--sans);color:var(--fg);-webkit-font-smoothing:antialiase
 .kpi .d.up{color:var(--c3)} .kpi .d.down{color:var(--c5)}
 .kpi .d span{color:var(--dim);font-weight:400;margin-left:5px}
 
-/* ── earth hero ── */
+/* ── earth hero (standalone Killzone) ── */
 .globe{position:relative;min-height:0;border-radius:8px;overflow:hidden}
 #earth{position:absolute;inset:0}
+/* ── gold chart hero (RYSE embed only) ── */
+.goldchart{position:relative;min-height:0;border-radius:8px;overflow:hidden;
+  background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line)}
+.tv-host{position:absolute;inset:52px 0 0 0;z-index:1}
+.tv-host .tradingview-widget-container,.tv-host .tradingview-widget-container__widget,
+.tv-host iframe{height:100% !important;width:100% !important}
+.kz-ribbon{position:absolute;left:0;right:0;top:0;z-index:4;padding:8px 14px 6px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 92%,transparent),color-mix(in srgb,var(--panel) 55%,transparent));
+  pointer-events:none}
+.kz-track{position:relative;height:8px;border-radius:99px;background:var(--raised);border:1px solid var(--line);overflow:hidden}
+.kz-win{position:absolute;top:0;bottom:0;border-radius:99px;opacity:.72}
+.kz-win.asia{background:color-mix(in srgb,var(--s3) 70%,transparent)}
+.kz-win.london{background:color-mix(in srgb,var(--s1) 85%,transparent)}
+.kz-win.ny{background:color-mix(in srgb,var(--s4) 75%,transparent)}
+.kz-win.live{opacity:1;box-shadow:0 0 12px color-mix(in srgb,var(--s1) 55%,transparent)}
+.kz-now{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:1px;
+  transform:translateX(-50%);box-shadow:0 0 8px var(--ink)}
+.kz-labels{display:flex;justify-content:space-between;margin-top:5px;font-size:10.5px;letter-spacing:.08em;color:var(--dim)}
+.kz-labels .on{color:var(--c1);font-weight:700}
 /* HUD corner brackets: one right angle per corner, fixed size, no drift with scaling */
 .hud{position:absolute;inset:0;pointer-events:none}
+.goldchart .hud{z-index:2}
 .hud i{position:absolute;width:26px;height:26px;border:1px solid color-mix(in srgb,var(--c1) 55%,transparent)}
 .hud i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}
 .hud i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
@@ -131,9 +150,12 @@ body{font:16px/1.4 var(--sans);color:var(--fg);-webkit-font-smoothing:antialiase
 .readout{position:absolute;left:14px;bottom:12px;display:flex;gap:10px;align-items:center;
   font-size:13px;color:var(--muted);background:color-mix(in srgb,var(--panel) 72%,transparent);
   border:1px solid var(--line);border-radius:5px;padding:7px 12px;backdrop-filter:blur(8px)}
+.goldchart .readout{flex-wrap:wrap;z-index:4;max-width:calc(100% - 28px);
+  background:color-mix(in srgb,var(--panel) 82%,transparent)}
 .readout b{color:var(--ink);font-weight:600;font-size:15px}
 .readout .k{color:var(--c1);font-family:var(--mono);font-variant-numeric:tabular-nums}
 .ghint{position:absolute;right:14px;bottom:12px;font-size:12px;color:var(--dim);letter-spacing:.08em}
+.goldchart .ghint{z-index:4;pointer-events:none}
 
 /* ── ranking ── */
 .rank{padding:4px 16px 12px;display:flex;flex-direction:column;justify-content:space-evenly;flex:1;overflow:hidden}
@@ -222,18 +244,23 @@ body{font:16px/1.4 var(--sans);color:var(--fg);-webkit-font-smoothing:antialiase
 .dots{position:absolute;right:32px;bottom:6px;display:flex;gap:6px;align-items:center;font-size:12px;color:var(--dim);z-index:5}
 .dots i{width:22px;height:3px;border-radius:2px;background:var(--line)}
 .dots i.on{background:var(--c1)}
+.dots .kz-leg{width:18px;height:6px;border-radius:99px}
+.dots .kz-leg.asia{background:var(--s3)}
+.dots .kz-leg.london{background:var(--s1)}
+.dots .kz-leg.ny{background:var(--s4)}
 
 .mono,.num,.val,.v,.kpi-val,td.n,th.n,.pct,.amt{font-family:var(--mono);
   font-variant-numeric:tabular-nums;font-feature-settings:"tnum","zero"}
 
 /* Touch: let the page scroll vertically over the globe while a horizontal drag still spins it. */
 #earth canvas{touch-action:pan-y}
+.tv-host iframe{touch-action:pan-y}
 
 /* ══ COMPACT LAYOUT ═══════════════════════════════════════════════════════
    Phones, small tablets and portrait windows (toggled by fit() in App.tsx).
    The 1920×1080 canvas is a wall-screen idea; below ~1200px it would shrink
    the text to nothing. Here the same cards stack in one scrolling column, in
-   the order a person on a phone wants them: numbers, globe, drivers, price. */
+   the order a person on a phone wants them: numbers, globe or gold chart, drivers, price. */
 html.compact,html.compact body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto;
   -webkit-text-size-adjust:100%}
 .compact #stage{position:relative;left:auto;top:auto;width:auto;height:auto;transform:none;
@@ -263,6 +290,7 @@ html.compact,html.compact body{height:auto;min-height:100%;overflow-x:hidden;ove
 .compact .col,.compact .mid{display:contents}
 .compact .kpibar{order:1;grid-template-columns:repeat(2,1fr);gap:8px}
 .compact .globe{order:2;height:min(96vw,440px,80vh);min-height:280px}
+.compact .goldchart{order:2;height:min(96vw,520px,80vh);min-height:320px}
 .compact .c-timing{order:3}
 .compact .c-trend{order:4}
 .compact .c-levels{order:5}
@@ -287,11 +315,13 @@ html.compact,html.compact body{height:auto;min-height:100%;overflow-x:hidden;ove
 .compact .kpi .v.txt{font-size:17px !important;white-space:normal;line-height:1.2;letter-spacing:.03em !important;margin:4px 0}
 .compact .kpi .d{font-size:12px}
 
-/* globe overlays shrink and wrap */
+/* globe overlays shrink and wrap; gold chart keeps room for the session ribbon */
 .compact .gtitle{left:12px;top:10px}
+.compact .goldchart .gtitle{top:50px}
 .compact .gtitle b{font-size:12px;letter-spacing:.18em}
 .compact .gtitle small{font-size:9px;letter-spacing:.14em}
 .compact .ghint{display:none}
+.compact .tv-host{inset:48px 0 0 0}
 .compact .readout{left:8px;right:8px;bottom:8px;flex-wrap:wrap;gap:4px 8px;font-size:12px;padding:6px 10px}
 .compact .readout b{font-size:14px}
 
@@ -324,8 +354,9 @@ html.compact,html.compact body{height:auto;min-height:100%;overflow-x:hidden;ove
 }
 @media (min-width:760px){
   .compact .body{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .compact .kpibar,.compact .globe,.compact .c-trend{grid-column:1/-1}
+  .compact .kpibar,.compact .goldchart,.compact .globe,.compact .c-trend{grid-column:1/-1}
   .compact .globe{height:min(70vw,520px,80vh)}
+  .compact .goldchart{height:min(70vw,560px,80vh)}
   .compact .c-trend{order:3}
   .compact .c-timing{order:4}
   .compact .c-levels{order:5}

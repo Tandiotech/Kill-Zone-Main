@@ -8,6 +8,7 @@ import { isRyseEmbed } from './lib/embed'
 import { useCockpit } from './lib/useCockpit'
 import { HUBS, TOUR, sessionLabel, type Model } from './lib/model'
 import { TimingBars } from './TimingBars'
+import { GoldTvChart, KillzoneReadout, SessionRibbon } from './GoldChart'
 
 interface Earth { focus: (city: string) => void }
 
@@ -43,11 +44,12 @@ export default function App() {
 
 function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; lastOk: number }) {
   const { signal, kpi, drivers, levels, alerts, timing, timingSampledAt } = model
+  const ryse = isRyseEmbed()
 
   const [curLevel, setCurLevel] = useState(-1)
   const [pick, setPick] = useState<{ city: string } | null>(null)
-  const [rtHint, setRtHint] = useState('Click to locate')
-  const [clock, setClock] = useState({ t: '', d: '', s: '' })
+  const [rtHint, setRtHint] = useState(ryse ? 'Tap a level' : 'Click to locate')
+  const [clock, setClock] = useState({ t: '', d: '', s: '', now: new Date() })
   const [fresh, setFresh] = useState(true)
   const [tourIdx, setTourIdx] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -60,12 +62,11 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
   const earth = useRef<Earth | null>(null)
   const idle = useRef(0)
 
-  /* The earth starts a beat late: the first paint (KPIs and charts) comes
-     first, and the 3D module's evaluation and scene build (a few hundred ms)
-     stays off the critical path. Until the globe is ready, focus() calls from
-     selection and the tour are guarded and skipped. */
+  /* RYSE embed: gold candles. Standalone Killzone: the 3D earth, loaded a beat
+     late so KPIs paint first. Until the globe is ready, focus() is skipped. */
   useEffect(() => {
     constellation(space.current, { count: 90, link: 118, speed: .05, alpha: .5 })
+    if (isRyseEmbed()) return
     const t = setTimeout(() => {
       import('./lib/globe.js').then(({ globe }) => globe(earthHost.current, {
         routes: [],
@@ -123,6 +124,7 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
         t: d.toTimeString().slice(0, 8),
         d: d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit', weekday: 'long' }),
         s: sessionLabel(d),
+        now: d,
       })
       // Stale data is never passed off as live: an old response flips the badge too.
       setFresh(Date.now() - lastOk <= STALE_MS)
@@ -131,8 +133,9 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
     return () => clearInterval(a)
   }, [lastOk])
 
-  /* ── auto tour when idle, paused by any interaction ─────────────────── */
+  /* ── auto tour when idle — standalone globe only ─────────────────────── */
   useEffect(() => {
+    if (isRyseEmbed()) return
     const id = setInterval(() => {
       idle.current++
       if (paused && idle.current > 30) setPaused(false)
@@ -151,12 +154,19 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
   }, [paused])
 
   const selLevel = (i: number) => {
+    if (ryse && curLevel === i) {
+      setCurLevel(-1)
+      setRtHint('Tap a level')
+      return
+    }
     setCurLevel(i)
     const lv = levels[i]
     setRtHint(lv.n + ' $' + lv.p.toFixed(1))
   }
 
   const live = online && fresh
+  const tvTheme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
+  const selected = curLevel >= 0 ? levels[curLevel] : null
   const pickedDriver = pick ? drivers.find(d => d.hub === pick.city) : undefined
 
   return (
@@ -173,7 +183,7 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
           <span>{signal.tradeZone}</span>
         </div>
         <div className="spacer" />
-        {!isRyseEmbed() && (
+        {!ryse && (
           <button type="button" className="affil" style={{ cursor: 'pointer', font: 'inherit', fontSize: 13,
                   letterSpacing: '.12em', fontWeight: 650 }} onClick={() => void signOut()}>
             SIGN OUT</button>
@@ -197,7 +207,7 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
           <div className="card c-turn"><h2>Driver scores<span className="r">0–100</span></h2><div className="chart" id="turn" /></div>
         </div>
 
-        {/* centre: the 3D earth */}
+        {/* centre: RYSE gets the gold chart; standalone Killzone keeps the earth */}
         <div className="mid">
           <div className="kpibar" id="kpibar">
             {kpi.map(k => {
@@ -218,26 +228,42 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
             })}
           </div>
 
-          <div className="globe">
-            <div id="earth" ref={earthHost} />
-            <div className="hud"><i /><i /><i /><i /></div>
-            <div className="gtitle"><b>GLOBAL GOLD MARKETS</b><small>BULLION HUBS · DRIVER MARKETS</small></div>
-            <div className="readout" id="readout">
-              {pick ? <>
-                <span>Selected hub</span><b>{pick.city}</b>
-                <span className="k">{pickedDriver ? 'Prices ' + pickedDriver.n : 'Bullion hub'}</span>
-                {pickedDriver && <span className="k">{pickedDriver.detail}</span>}
-              </> : <>
-                <span>Hubs</span><b>{HUBS.length}</b>
+          {ryse ? (
+            <div className="goldchart">
+              <SessionRibbon now={clock.now} />
+              <GoldTvChart theme={tvTheme} />
+              <div className="hud"><i /><i /><i /><i /></div>
+              <div className="readout" id="readout">
+                <KillzoneReadout now={clock.now} selected={selected} />
                 <span className="k">
-                  {'TP $' + signal.keyLevels.tp.toFixed(0) + ' · SL $' + signal.keyLevels.sl.toFixed(0)}</span>
-              </>}
+                  {'TP $' + signal.keyLevels.tp.toFixed(0) + ' · SL $' + signal.keyLevels.sl.toFixed(0)}
+                </span>
+              </div>
+              <div className="ghint">Scroll to zoom · tap a key level to pin it</div>
             </div>
-            <div className="ghint">Drag to rotate · click a hub or a driver to locate</div>
-          </div>
+          ) : (
+            <div className="globe">
+              <div id="earth" ref={earthHost} />
+              <div className="hud"><i /><i /><i /><i /></div>
+              <div className="gtitle"><b>GLOBAL GOLD MARKETS</b><small>BULLION HUBS · DRIVER MARKETS</small></div>
+              <div className="readout" id="readout">
+                {pick ? <>
+                  <span>Selected hub</span><b>{pick.city}</b>
+                  <span className="k">{pickedDriver ? 'Prices ' + pickedDriver.n : 'Bullion hub'}</span>
+                  {pickedDriver && <span className="k">{pickedDriver.detail}</span>}
+                </> : <>
+                  <span>Hubs</span><b>{HUBS.length}</b>
+                  <span className="k">
+                    {'TP $' + signal.keyLevels.tp.toFixed(0) + ' · SL $' + signal.keyLevels.sl.toFixed(0)}</span>
+                </>}
+              </div>
+              <div className="ghint">Drag to rotate · click a hub or a driver to locate</div>
+            </div>
+          )}
 
           <div className="card c-trend">
-            <h2>Gold price · 1H with key levels<span className="r" id="trendScope">TP / SL / PIVOTS</span></h2>
+            <h2>{ryse ? 'Killzone levels on gold · 1H' : 'Gold price · 1H with key levels'}
+              <span className="r" id="trendScope">TP / SL / PIVOTS</span></h2>
             <div className="chart" id="trend" />
           </div>
         </div>
@@ -276,10 +302,22 @@ function Cockpit({ model, online, lastOk }: { model: Model; online: boolean; las
         </div>
       </div>
 
-      <div className="dots" id="dots">
-        <span id="tourTxt">{paused ? 'TOUR PAUSED' : 'AUTO TOUR'}</span>
-        {TOUR.map((_, i) => <i className={i === tourIdx ? 'on' : ''} key={i} />)}
-      </div>
+      {ryse ? (
+        <div className="dots" id="dots">
+          <span id="tourTxt">GOLD KILLZONES · UTC</span>
+          <i className="kz-leg asia" />
+          <span>Asia</span>
+          <i className="kz-leg london" />
+          <span>London</span>
+          <i className="kz-leg ny" />
+          <span>New York</span>
+        </div>
+      ) : (
+        <div className="dots" id="dots">
+          <span id="tourTxt">{paused ? 'TOUR PAUSED' : 'AUTO TOUR'}</span>
+          {TOUR.map((_, i) => <i className={i === tourIdx ? 'on' : ''} key={i} />)}
+        </div>
+      )}
     </div>
   )
 }
